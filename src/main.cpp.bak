@@ -1,0 +1,350 @@
+#include <Arduino.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <MIDI.h>
+#include <SoftwareSerial.h>
+#include <Keyboard.h>
+#include <Keypad.h>
+#include <Adafruit_VS1053.h>
+#include "VS1053.h"
+
+
+//
+// Assinaturas de Funções
+//
+void toca_midi(byte n);
+byte traduzNota(char t);
+
+// Use binary to say which MIDI channels this should respond to.
+// Every "1" here enables that channel. Set all bits for all channels.
+// Make sure the bit for channel 10 is set if you want drums.
+//
+//                               16  12  8   4  1
+//                               |   |   |   |  |
+uint16_t MIDI_CHANNEL_FILTER = 0b1111111111111111;
+
+// Channel to link to the potentiometer
+#define POT_MIDI_CHANNEL 1
+
+//card select
+#define CARDCS          9
+
+// Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(VS_RESET, VS_XCS, VS_XDCS, VS_DREQ, CARDCS);
+
+
+// There are three selectable sound banks on the VS1053
+// These can be selected using the MIDI command 0xBn 0x00 bank
+#define DEFAULT_SOUND_BANK 0x00  // General MIDI 1 sound bank
+#define DRUM_SOUND_BANK    0x78  // Drums
+#define ISNTR_SOUND_BANK   0x79  // General MIDI 2 sound bank
+
+int counter = 0;                 // button push counter
+int buttonState = 0;
+char inicio = 0;
+char tecla = 0;
+
+char tecla_z = 0;
+char tecla_x = 0;
+char tecla_c = 0;
+char tecla_u = 0;
+char tecla_y = 0;
+char tecla_t = 0;
+char tecla_r = 0;
+char tecla_e = 0;
+char tecla_w = 0;
+char tecla_q = 0;
+char tecla_j = 0;
+char tecla_h = 0;
+char tecla_g = 0;
+char tecla_v = 0;
+char tecla_b = 0;
+char tecla_n = 0;
+char tecla_m = 0;
+
+char tocando = 0;
+char toca = 0;
+
+byte altura = 0;
+byte nota = 0;
+const byte LINHAS = 6; // Linhas do teclado
+const byte COLUNAS = 6; // Colunas do teclado
+const byte PINOS_LINHAS[LINHAS] = {3, 30, 5, 8, 10, 13 }; // l1=pd0,l2=pd4,l3=pc6,l4=pb4,l5=pb6,l6=pc7
+const byte PINOS_COLUNAS[COLUNAS] = {A0, A1, A2, A3, A4, A5}; // r0,r1,r2,r3,r4,r5,r6,r7
+/*
+  const char TECLAS_MATRIZ[LINHAS][COLUNAS] = { // Matriz de caracteres (mapeamento do teclado TOMPLAY)
+  {'0','1','2','3','4','5'},
+  {'6','7','8','9','a','b'},
+  {'c','d','e','f','g','h'},
+  {'i','j','k','l','m','n'},
+  {'o','p','q','r','s','t'},
+  {'u','v','w','x','y','z'}
+  };*/
+  const char TECLAS_MATRIZ[LINHAS][COLUNAS] = { // Matriz de caracteres (mapeamento do teclado TOMPLAY)
+  {'3','m','8','j','r','u'},
+  {'c','n','d','h','e','l'},
+  {'x','5','s','g','o','y'},
+  {'2','b','7','0','w','k'},
+  {'z','4','a','f','i','t'},
+  {'1','v','6','9','q','p'}
+  };
+
+Keypad teclado_personalizado = Keypad(makeKeymap(TECLAS_MATRIZ), PINOS_LINHAS, PINOS_COLUNAS, LINHAS, COLUNAS); // Inicia teclado
+
+byte bank = 0;
+// List of instruments to send to any configured MIDI channels.
+byte preset_instruments[16] = {
+  /* 01 */  0,
+  /* 02 */  0,
+  /* 03 */  10,
+  /* 04 */  10,
+  /* 05 */  10,
+  /* 06 */  0,
+  /* 07 */  0,
+  /* 08 */  0,
+  /* 09 */  0,
+  /* 10 */  0,  // Channel 10 will be ignored later as that is percussion anyway.
+  /* 11 */  0,
+  /* 12 */  0,
+  /* 13 */  0,
+  /* 14 */  0,
+  /* 15 */  0,
+  /* 16 */  0
+};
+
+// This is required to set up the MIDI library.
+// The default MIDI setup uses the built-in serial port.
+MIDI_CREATE_DEFAULT_INSTANCE();
+
+byte instrument;
+
+void setup() {
+  Keyboard.begin();
+
+  initialiseVS1053();
+  //  Serial.begin(9600);
+  // This listens to all MIDI channels
+  // They will be filtered out later...
+  
+
+  // if (! musicPlayer.begin()) { // initialise the music player
+  //    Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
+  //    while (1);
+  // }
+  // // musicPlayer.sineTest(0x44, 500);    // Make a tone to indicate VS1053 is working
+
+  // if (!SD.begin(CARDCS)) {
+  //   Serial.println(F("SD failed, or not present"));
+  // }
+  // Serial.println("SD OK!");
+  
+  // // Set volume for left, right channels. lower numbers == louder volume!
+  // musicPlayer.setVolume(40,40);
+
+  // // Timer interrupts are not suggested, better to use DREQ interrupt!
+  // // but we don't have them on the 32u4 feather...
+  // musicPlayer.useInterrupt(VS1053_FILEPLAYER_TIMER0_INT); // timer int
+
+  // Serial.println(F("Playing full track 001"));
+  // // musicPlayer.startPlayingFile("/track001.mp3");
+
+  MIDI.begin(MIDI_CHANNEL_OMNI);
+  talkMIDI(0xb0, 0x0b, 127);
+}
+void loop() 
+{
+    if (tocando == 0) 
+    {
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_u == 2) 
+        {
+            talkMIDI (0xC0, 0, 127);
+            if (toca == 55) 
+            {
+                toca = 0;
+            }  
+            else 
+            {
+                toca = 55;
+            }
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_j == 2) 
+        {
+            talkMIDI (0xC0, 2, 127);
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_g == 2) 
+        {
+            talkMIDI (0xC0, 14, 127);
+            //toca betovem
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_h == 2) 
+        {
+            talkMIDI (0xC0, 25, 127);
+            //toca betovem
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_e == 2) {
+            talkMIDI (0xC0, 40, 127);
+            //toca betovem
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_r == 2) {
+            talkMIDI (0xC0, 66, 127);
+            //toca betovem
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_t == 2) {
+            talkMIDI (0xC0, 73, 127);
+            //toca betovem
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_y == 2) {
+            talkMIDI (0xC0, 114, 127);
+            //toca betovem
+            tocando = 55;
+        }
+
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_v == 2) {
+            altura = 12;
+            //toca betovem
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_b == 2) {
+            altura = 24;
+            //toca betovemz
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_n == 2) {
+            altura = 36;
+            //toca betovem
+            tocando = 55;
+        }
+        if (tecla_z == 2 && tecla_x == 2 && tecla_c == 2 && tecla_m == 2) {
+            altura = 0;
+            //toca betovem
+            tocando = 55;
+        }
+    }
+  //            playerMP3.stop();
+  char leitura_teclas = teclado_personalizado.getKeys(); // Atribui a variavel a leitura do teclado
+  if (leitura_teclas) {
+    for (int i = 0; i < LIST_MAX; i++) // Scan the whole key list.
+    {
+      if ( teclado_personalizado.key[i].stateChanged )   // Only find keys that have changed state.
+      {
+        if (teclado_personalizado.key[i].kchar == 'z') {
+          tecla_z = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'x') {
+          tecla_x = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'c') {
+          tecla_c = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'e') {
+          tecla_e = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'r') {
+          tecla_r = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 't') {
+          tecla_t = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'y') {
+          tecla_y = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'u') {
+          tecla_u = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'h') {
+          tecla_h = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'g') {
+          tecla_g = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'j') {
+          tecla_j = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'v') {
+          tecla_v = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'b') {
+          tecla_b = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'n') {
+          tecla_n = teclado_personalizado.key[i].kstate;
+        }
+        if (teclado_personalizado.key[i].kchar == 'm') {
+          tecla_m = teclado_personalizado.key[i].kstate;
+        }
+
+        if (teclado_personalizado.key[i].kstate == PRESSED) {
+          Keyboard.print(teclado_personalizado.key[i].kchar);
+          if (toca == 0) {
+            tecla = teclado_personalizado.key[i].kchar;
+            nota = traduzNota(tecla);
+            toca_midi(nota);
+            tecla = 0;
+          }
+          else
+          {
+            tecla = 0;
+          }
+          tocando = 0;
+        }
+      }
+    }
+  }
+}
+
+
+byte traduzNota(char t) {
+    byte n = 0;
+    if (t == 'z') n = 36;
+    else if (t == '1') n = 37;
+    else if (t == 'x') n = 38;
+    else if (t == '2') n = 39;
+    else if (t == 'c') n = 40;
+    else if (t == 'v') n = 41;
+    else if (t == '3') n = 42;
+    else if (t == 'b') n = 43;
+    else if (t == '4') n = 44;
+    else if (t == 'n') n = 45;
+    else if (t == '5') n = 46;
+    else if (t == 'm') n = 47;
+    else if (t == 'a') n = 48;
+    else if (t == '6') n = 49;
+    else if (t == 's') n = 50;
+    else if (t == '7') n = 51;
+    else if (t == 'd') n = 52;
+    else if (t == 'f') n = 53;
+    else if (t == '8') n = 54;
+    else if (t == 'g') n = 55;
+    else if (t == '9') n = 56;
+    else if (t == 'h') n = 57;
+    else if (t == '0') n = 58;
+    else if (t == 'j') n = 59;
+    else if (t == 'q') n = 60;
+    else if (t == 'i') n = 61;
+    else if (t == 'w') n = 62;
+    else if (t == 'o') n = 63;
+    else if (t == 'e') n = 64;
+    else if (t == 'r') n = 65;
+    else if (t == 'p') n = 66;
+    else if (t == 't') n = 67;
+    else if (t == 'k') n = 68;
+    else if (t == 'y') n = 69;
+    else if (t == 'l') n = 70;
+    else if (t == 'u') n = 71;
+    // Serial.println(altura);
+    return n + altura;
+  
+}
+
+void toca_midi(byte n) {
+  talkMIDI (0x90, n, 127);
+  delay (30);
+  talkMIDI (0x80, n, 0);
+  delay (10);
+}

@@ -49,7 +49,7 @@ void talkMIDI(byte cmd, byte data1, byte data2)
 void initialiseVS1053 () 
 {
     // Set up the pins controller the SPI link to the VS1053
-    pinMode(VS_DREQ, INPUT);
+    pinMode(VS_DREQ, INPUT_PULLUP);
     pinMode(VS_XCS, OUTPUT);
     pinMode(VS_XDCS, OUTPUT);
     digitalWrite(VS_XCS, HIGH);  //Deselect Control
@@ -69,8 +69,13 @@ void initialiseVS1053 ()
     SPI.transfer(0xFF); //Throw a dummy byte at the bus
 
     delayMicroseconds(1);
+
+    //delay(500);
+
     digitalWrite(VS_RESET, HIGH); //Bring up VS1053
 
+
+    //delay(500);
     // Enable real-time MIDI mode
     VSLoadUserCode();
 }

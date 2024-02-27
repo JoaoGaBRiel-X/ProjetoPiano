@@ -1,0 +1,161 @@
+import socket
+
+# Define host and ports
+HOST = '192.168.1.3'  # Listen on all available interfaces
+PORT1 = 8001
+PORT2 = 8002
+PORT3 = 8003
+
+# Create socket objects
+server1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Bind the servers to their respective ports
+server1.bind((HOST, PORT1))
+server2.bind((HOST, PORT2))
+server3.bind((HOST, PORT3))
+
+# Listen for incoming connections
+server1.listen()
+server2.listen()
+server3.listen()
+
+print(f"Listening on ports {PORT1}, {PORT2}, {PORT3}")
+
+while True:{
+    # Accept incoming connections
+    client1, addr1 = server1.accept()
+    client2, addr2 = server2.accept()
+    client3, addr3 = server3.accept()
+
+    print(f"Connection from {addr1} on port {PORT1}")
+    print(f"Connection from {addr2} on port {PORT2}")
+    print(f"Connection from {addr3} on port {PORT3}")
+
+    # Code to handle client1
+    client1.sendall(b"Hello from Server 1")
+    client1.close()
+
+    # Code to handle client2
+    client2.sendall(b"Hello from Server 2")
+    client2.close()
+
+    # Code to handle client3
+    client3.sendall(b"Hello from Server 3")
+    client3.close()
+}
+while True:
+    client, addr = server.accept()
+    print(f"Connection from {addr}")
+    
+    # Send a message to the client
+    client.sendall(b"Connected:")
+    
+    # Close the connection
+    client.close()
+To
+while True:
+   data = client1.recv(1024)
+    if data:
+    client2.sendall(f"Received: {data.decode('utf-8')}")
+   data = client2.recv(1024)
+    if data:
+    client1.sendall(f"Received: {data.decode('utf-8')}")
+        client1.sendall(f"Received: {data.decode('utf-8')}")
+
+
+
+import socket
+
+HOST = '192.168.1.3'  # Listen on all available interfaces
+PORT_RECEIVE = 8001
+
+server_receive = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_receive.bind((HOST, PORT_RECEIVE))
+server_receive.listen()
+
+print(f"Listening on port {PORT_RECEIVE}")
+
+client_send_8002 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_send_8002.connect((HOST, 8002))
+
+while True:
+    conn_receive, addr_receive = server_receive.accept()
+    print(f"Connection from {addr_receive}")
+
+    # Receive data from the client on port 8001
+    data = conn_receive.recv(1024)
+    if data:
+        print(f"Received: {data.decode('utf-8')}")
+
+        # Send the received data to port 8002
+        client_send_8002.sendall(data)
+
+    # Close the connection on port 8001
+    conn_receive.close()
+
+
+
+
+import socket
+
+HOST = '192.168.1.3'  # Listen on all available interfaces
+PORT_RECEIVE = 8002
+
+server_receive = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_receive.bind((HOST, PORT_RECEIVE))
+server_receive.listen()
+
+print(f"Listening on port {PORT_RECEIVE}")
+
+client_send_8001 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_send_8001.connect((HOST, 8001))
+
+while True:
+    conn_receive, addr_receive = server_receive.accept()
+    print(f"Connection from {addr_receive}")
+
+    # Receive data from the client on port 8002
+    data = conn_receive.recv(1024)
+    if data:
+        print(f"Received: {data.decode('utf-8')}")
+
+        # Send the received data back to port 8001
+        client_send_8001.sendall(data)
+
+    # Close the connection on port 8002
+    conn_receive.close()
+
+
+import socket
+import threading
+
+def handle_client(conn, port):
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            break
+        print(f"Received from port {port}: {data.decode('utf-8')}")
+        conn.sendall(b"Message received")
+
+def start_server(port):
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(('192.168.1.3', port))
+    server.listen()
+
+    print(f"Listening on port {port}")
+
+    while True:
+        conn, addr = server.accept()
+        print(f"Connection from {addr}")
+
+        client_handler = threading.Thread(target=handle_client, args=(conn, port))
+        client_handler.start()
+
+if __name__ == "__main__":
+    thread1 = threading.Thread(target=start_server, args=(8001,))
+    thread2 = threading.Thread(target=start_server, args=(8002,))
+
+    thread1.start()
+    thread2.start()

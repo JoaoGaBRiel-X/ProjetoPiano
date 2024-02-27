@@ -8,7 +8,7 @@
 #define VS_XCS    6 // Control Chip Select Pin (for accessing SPI Control/Status registers)
 #define VS_XDCS   7 // Data Chip Select / BSYNC Pin
 #define VS_DREQ   2 // Data Request Pin: Player asks for more data
-#define VS_RESET  8 // Reset is active low
+#define VS_RESET  9 // Reset is active low
 
 void sendMIDI(byte data);
 void talkMIDI(byte cmd, byte data1, byte data2);
