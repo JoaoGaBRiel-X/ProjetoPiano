@@ -79,10 +79,13 @@ void loop()
 
                     if (tecla == 0x70)
                         flagProg01 = 1;
+                        Serial.println(nota);
                     if (tecla == 0x6b)
                         flagProg02 = 1;
+                        Serial.println(nota);
                     if (tecla == 0x6c)
                         flagProg03 = 1;
+                        Serial.println(nota);
                 }
                 if (teclado_personalizado.key[i].kstate == RELEASED)
                 {

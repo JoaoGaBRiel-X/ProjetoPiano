@@ -1,5 +1,7 @@
 #include "VS1053.h"
 
+extern uint8_t volume;
+
 byte bank = 0;
 // List of instruments to send to any configured MIDI channels.
 byte preset_instruments[16] = {
@@ -291,12 +293,12 @@ byte traduzNota(char t)
 
 void toca_midi(byte n)
 {
-    talkMIDI(0x90, n, 127);
+    talkMIDI(0x90, n, volume);
     delay(10);
 }
 
 void para_midi(byte n)
 {
     delay(5);
-    talkMIDI(0x80, n, 127);
+    talkMIDI(0x80, n, volume);
 }

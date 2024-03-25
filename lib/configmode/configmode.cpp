@@ -1,7 +1,8 @@
 #include <configmode.h>
 
 
-unsigned long timeProg = 0;
+unsigned long timeProg1 = 0;
+unsigned long timeProg2 = 0;
 uint8_t flagvolume = 0;
 uint8_t flagProg01 = 0;
 uint8_t flagProg02 = 0;
@@ -9,25 +10,34 @@ uint8_t flagProg03 = 0;
 uint8_t volume = 127;
 uint8_t prg = 0;
 
+void inicio_prg(){
+            para_midi(78);
+            para_midi(80);
+            para_midi(82);
+            talkMIDI(0xc0, 118, 127);
+            toca_midi(81);
+            delay(300);
+            para_midi(81);
+            toca_midi(81);
+            delay(300);
+            para_midi(81);
+            toca_midi(82);
+            delay(300);
+            para_midi(82);
+            prg = 1;
+}
 
 void handleConfigMode()
 {
         if(flagProg02 && flagProg03)
     {
 
-        if(!timeProg){
-            timeProg = millis();
+        if(!timeProg1){
+            timeProg1 = millis();
         }
-        if(millis() - timeProg >= 3000)
+        if(millis() - timeProg1 >= 3000)
         {
-            talkMIDI(0xc0, 0x78, 127);
-            toca_midi(71);
-            delay(300);
-            para_midi(71);
-            toca_midi(71);
-            delay(300);
-            para_midi(71);
-            prg = 1;
+            inicio_prg();
             uint8_t countTeclas = 0;
             uint8_t cmd = 0;
             while(prg)
@@ -203,7 +213,7 @@ void handleConfigMode()
                         para_midi(69);
                         tecla = 0;
                         prg = 0;
-                        timeProg = 0;
+                        timeProg1 = 0;
                         countTeclas = 0;
                         flagProg01 = 0; 
                         flagProg02 = 0; 
@@ -215,7 +225,205 @@ void handleConfigMode()
         }        
         
     } else {
-        timeProg = 0;
+        timeProg1 = 0;
+    }
+        if(flagProg01 && flagProg02)
+    {
+
+        if(!timeProg2){
+            timeProg2 = millis();
+        }
+        if(millis() - timeProg2 >= 3000)
+        {
+            inicio_prg();
+            uint8_t countTeclas = 0;
+            uint8_t vol = 0;
+            while(prg)
+            {
+                char tecla = teclado_personalizado.getKey();
+                if(tecla != 0)
+                {
+                    if((countTeclas == 0) && (  tecla == 0x7a ||    // tecla 0
+                                                tecla == 0x78))     // tecla 1
+                    {
+                        tocaSucesso(countTeclas);
+                        if(tecla == 0x78)
+                        {
+                            vol += 100;
+                        }
+                        countTeclas++;
+                        tecla = 0;
+                    }
+                    else if (countTeclas == 0)
+                    {  
+                        tocaErro();
+                        tecla = 0;
+                    }
+                    if((countTeclas == 1) && (tecla != 0))   
+                    {
+                        if(vol == 100)
+                        {
+                            if( tecla == 0x7a ||  // tecla 0
+                                tecla == 0x78 ||  // tecla 1
+                                tecla == 0x63) // tecla 2
+                            {
+                                tocaSucesso(countTeclas);
+                                if(tecla == 0x78)
+                                {
+                                    vol += 10;
+                                }
+                                if(tecla == 0x63)
+                                {
+                                    vol += 20;
+                                }
+                                countTeclas++;
+                                tecla = 0;
+                            }
+                            else
+                            {  
+                                tocaErro();
+                                tecla = 0;
+                            }
+                        }
+                        else
+                        {
+                            if(tecla == 0x7a) // tecla 0
+                            {
+                                tocaSucesso(countTeclas);
+                            }
+                            else if(tecla == 0x78) // tecla 1
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 10;
+                            }
+                            else if(tecla == 0x63) // tecla 2
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 20;
+                            }
+                            else if(tecla == 0x76) // tecla 3
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 30;
+                            }
+                            else if(tecla == 0x62) // tecla 4
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 40;
+                            }
+                            else if(tecla == 0x6e) // tecla 5
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 50;
+                            }
+                            else if(tecla == 0x6d) // tecla 6
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 60;
+                            }
+                            else if(tecla == 0x61) // tecla 7
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 70;
+                            }
+                            else if(tecla == 0x73) // tecla 8
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 80;
+                            }
+                            else if(tecla == 0x64) // tecla 9
+                            {
+                                tocaSucesso(countTeclas);
+                                vol += 90;
+                            }
+                            else
+                            {
+                                tocaErro();
+                                continue;
+                            }
+                            countTeclas++;
+                            tecla = 0;
+                        }
+                       
+                    }
+                    if(countTeclas == 2 && tecla != 0)
+                    {
+                        if(tecla == 0x78) // tecla 1
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 1;
+                        }
+                        if(tecla == 0x63) // tecla 2
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 2;
+                        }
+                        if(tecla == 0x76) // tecla 3
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 3;
+                        }
+                        if(tecla == 0x62) // tecla 4
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 4;
+                        }
+                        if(tecla == 0x6e) // tecla 5
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 5;
+                        }
+                        if(tecla == 0x6d) // tecla 6
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 6;
+                        }
+                        if(tecla == 0x61) // tecla 7
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 7;
+                        }
+                        if(tecla == 0x73) // tecla 8
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 8;
+                        }
+                        if(tecla == 0x64) // tecla 9
+                        {
+                            tocaSucesso(countTeclas);
+                            vol += 9;
+                        }
+                        countTeclas++;
+                        tecla = 0;
+                    }
+                    Serial.println(vol);
+                    if(countTeclas == 3)
+                    {
+                        volume = vol;    
+                        toca_midi(65);
+                        delay(200);
+                        para_midi(65);
+                        toca_midi(67);
+                        delay(200);
+                        para_midi(67);
+                        toca_midi(69);
+                        delay(200);
+                        para_midi(69);
+                        tecla = 0;
+                        prg = 0;
+                        timeProg2 = 0;
+                        countTeclas = 0;
+                        flagProg01 = 0; 
+                        flagProg02 = 0; 
+                        flagProg03 = 0; 
+                    }
+                }
+                    
+            }
+        }        
+        
+    } else {
+        timeProg2 = 0;
     }
 }
 
