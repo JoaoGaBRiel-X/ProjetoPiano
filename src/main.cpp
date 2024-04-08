@@ -47,6 +47,9 @@ void setup()
     toca_midi((byte)76);
     delay(300);
     toca_midi((byte)79);
+
+    pinMode (PD4 , OUTPUT);
+    digitalWrite (PD4, LOW);
 }
 void loop()
 {
@@ -56,12 +59,12 @@ void loop()
         {
             if (teclado_personalizado.key[i].stateChanged) // Only find keys that have changed state.
             {
-                uint8_t state = teclado_personalizado.key[i].kstate;
-                if (state > 0)
-                {
-                    Serial.print(traduzNota(teclado_personalizado.key[i].kchar));
-                    Serial.println(state);
-                }
+//                uint8_t state = teclado_personalizado.key[i].kstate;
+//                if (state > 0)
+//                {
+//                    Serial.print(traduzNota(teclado_personalizado.key[i].kchar));
+//                    Serial.println(state);
+//                }
 
                 if (teclado_personalizado.key[i].kstate == PRESSED)
                 {
@@ -79,13 +82,13 @@ void loop()
 
                     if (tecla == 0x70)
                         flagProg01 = 1;
-                        Serial.println(nota);
+//                        Serial.println(nota);
                     if (tecla == 0x6b)
                         flagProg02 = 1;
-                        Serial.println(nota);
+//                        Serial.println(nota);
                     if (tecla == 0x6c)
                         flagProg03 = 1;
-                        Serial.println(nota);
+//                        Serial.println(nota);
                 }
                 if (teclado_personalizado.key[i].kstate == RELEASED)
                 {
@@ -115,8 +118,8 @@ void loop()
                         flagProg02 = 0;
                     if (tecla == 0x6c)
                         flagProg03 = 0;
-                    Serial.print("parou");
-                    Serial.println(tecla);
+//                    Serial.print("parou");
+//                    Serial.println(tecla);
                     para_midi(nota);
                     // }
                 }
