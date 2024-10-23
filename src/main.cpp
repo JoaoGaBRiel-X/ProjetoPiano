@@ -40,13 +40,14 @@ void setup()
 
     midiSetChannelVolume(0, volume);
 
-    delay(100);
+    delay(1000);
 
-    toca_midi((byte)72);
+    toca_midi((byte)65);
     delay(300);
-    toca_midi((byte)76);
+    toca_midi((byte)69);
     delay(300);
-    toca_midi((byte)79);
+    toca_midi((byte)67);
+    delay(300);
 
     pinMode (PD4 , OUTPUT);
     digitalWrite (PD4, LOW);
@@ -128,6 +129,7 @@ void loop()
         }
     }
     handleConfigMode();
+    prg=0;
 }
 
 ISR(TIMER1_OVF_vect) // interrupção do TIMER1

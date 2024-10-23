@@ -9,3 +9,4 @@ char TECLAS_MATRIZ[LINHAS][COLUNAS] = { // Matriz de caracteres (mapeamento do t
     {'z', 'b', '7', '0', 'w', 'k'},
     {'1', '4', 'a', 'f', 'i', 't'},
     {'3', 'v', '6', '9', 'q', 'p'}};
+

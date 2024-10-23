@@ -262,7 +262,6 @@ byte traduzNota(char t)
         n = 58;
     else if (t == 'j')
         n = 59;
-
     else if (t == 'q')
         n = 60;
     else if (t == 'i')

@@ -10,7 +10,13 @@ uint8_t flagProg03 = 0;
 uint8_t volume = 127;
 uint8_t prg = 0;
 
+
 void inicio_prg(){
+            timeProg1 = 0;
+            timeProg2 = 0;
+            flagProg01 = 0;
+            flagProg02 = 0;
+            flagProg03 = 0;
             para_midi(78);
             para_midi(80);
             para_midi(82);
